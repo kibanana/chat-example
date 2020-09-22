@@ -3,7 +3,7 @@ import socket from '../lib/socket';
 import ChatForm from './ChatForm';
 
 interface message {
-    id: string
+    key?: string
     name: string
     message: string
 }
@@ -31,12 +31,11 @@ class ChatApp extends React.Component<{}, State> {
             this.setState({ name, cnt });
         });
 
-        socket.on('receive-msg', (params: message = { id: '', name: '', message: '' }) => {
-            const { id, name, message } = params;            
+        socket.on('receive-msg', (params: message = { name: '', message: '' }) => {
+            const { name, message } = params;            
             const { logs } = this.state;
             const tempLog = logs;
             tempLog.unshift({
-                id,
                 key: `${tempLog.length + 1}`,
                 name,
                 message,
@@ -57,13 +56,12 @@ class ChatApp extends React.Component<{}, State> {
 
     render() {
         const { logs, name } = this.state;
-        const messages = logs.map(message => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        const messages = logs.map((message: message) => (
             <div style={{background: 'blue'}} key={message.key}>
                 <span>{message.name}</span>
                 <span>{message.message}</span>
             </div>
-        });
+        ));
         
         return (
             <div>
