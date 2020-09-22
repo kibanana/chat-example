@@ -2,55 +2,47 @@ import React from 'react';
 import socket from '../lib/socket';
 
 interface State {
-    name: string;
+    tempName: string;
+    readOnlyName: boolean;
     message: string;
     cnt: number;
 }
 
-interface cnt {
+interface Props {
     name: string
-    cnt: number
+    handleChangeName: Function
+    handleSendMessage: Function
 }
 
-class ChatForm extends React.Component {
-    state: State;
-
-    constructor (props: Readonly<{}>) {
+class ChatForm extends React.Component<Readonly<Props>, State> {
+    constructor (props: Readonly<Props>) {
         super(props);
-        this.state = { name: '', message: '', cnt: -1 };
+        this.state = { tempName: '', readOnlyName: true, message: '', cnt: -1 };
     }
 
-    componentDidMount() {
-        socket.on('receive-name', (params: cnt = { name: '', cnt: -1 }) => {
-            const { name, cnt } = params;
-            this.setState({ name, cnt });
-        });
-    }
+    handleChange = (e: { target: { name: any; value: any; }; }) => this.setState({ ...this.state, [e.target.name]: e.target.value })
 
-    handleChange = (e: { target: { name: any; value: any; }; }) => this.setState({ [e.target.name]: e.target.value })
-
-    updateName() {
-        const { name } = this.state;
-        socket.emit('update-name', { name });
-    }
-
-    sendMessage() {
-        const { name, message } = this.state;
-        socket.emit('send-msg', { name, message });
-        this.setState({ message: '' });
-    }
+    handleChangeNameReadOnly = (e: any) => this.setState((state) => ({ readOnlyName: !state.readOnlyName }))
 
     render() {
-        const { name, message } = this.state;
+        const { handleChangeName, handleSendMessage } = this.props;
+        const { tempName, readOnlyName, message } = this.state;
 
         return (
             <div>
                 <form>
-                    <input type="text" name="name" value={name} onChange={this.handleChange}/>
-                    <button onClick={this.updateName}>이름 변경</button>
+                    <input
+                        type="text"
+                        name="tempName"
+                        readOnly={readOnlyName}
+                        value={readOnlyName ? this.props.name : tempName}
+                        onChange={this.handleChange}
+                        onDoubleClick={this.handleChangeNameReadOnly}
+                    />
+                    <button type="button" onClick={() => handleChangeName(tempName)}>이름 변경</button>
                     <br />
                     <input type="text" name="message" value={message} onChange={this.handleChange}/>
-                    <button onClick={this.sendMessage}>보내기</button>
+                    <button type="button" onClick={() => { handleSendMessage(message); this.setState({ message: '' }); }}>보내기</button>
                 </form>
             </div>
         );
