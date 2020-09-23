@@ -1,5 +1,7 @@
 import React from 'react';
-import socket from '../lib/socket';
+import { Button, TextField, Card, CardContent } from '@material-ui/core';
+import ForumIcon from '@material-ui/icons/Forum';
+import SaveIcon from '@material-ui/icons/Save';
 
 interface State {
     tempName: string;
@@ -29,22 +31,54 @@ class ChatForm extends React.Component<Readonly<Props>, State> {
         const { tempName, readOnlyName, message } = this.state;
 
         return (
-            <div>
-                <form>
-                    <input
-                        type="text"
-                        name="tempName"
-                        readOnly={readOnlyName}
-                        value={readOnlyName ? this.props.name : tempName}
-                        onChange={this.handleChange}
-                        onDoubleClick={this.handleChangeNameReadOnly}
-                    />
-                    <button type="button" onClick={() => handleChangeName(tempName)}>이름 변경</button>
-                    <br />
-                    <input type="text" name="message" value={message} onChange={this.handleChange}/>
-                    <button type="button" onClick={() => { handleSendMessage(message); this.setState({ message: '' }); }}>보내기</button>
-                </form>
-            </div>
+            <Card>
+                <CardContent>
+                    <form>
+                        <TextField
+                            type="text"
+                            name="tempName"
+                            label="이름"
+                            value={readOnlyName ? this.props.name : tempName}
+                            disabled={readOnlyName}
+                            onChange={this.handleChange}
+                            onDoubleClick={this.handleChangeNameReadOnly}
+                            onBlur={this.handleChangeNameReadOnly}
+                            autoComplete="off"
+                        />
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            size="large" 
+                            onClick={() => tempName && handleChangeName(tempName)}
+                            startIcon={<SaveIcon />}>
+                            이름 변경
+                        </Button>
+
+                        <br />
+
+                        <TextField
+                            type="text"
+                            label="메시지"
+                            name="message"
+                            value={message}
+                            onChange={this.handleChange}
+                            autoComplete="off"
+                        />
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            onClick={() => {
+                                if (!message) return;
+                                handleSendMessage(message);
+                                this.setState({ message: '' });
+                            }}
+                            startIcon={<ForumIcon />}>
+                            보내기
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
         );
     }
 }

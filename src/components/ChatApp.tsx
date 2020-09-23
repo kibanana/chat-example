@@ -1,4 +1,9 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
+import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import FolderIcon from '@material-ui/icons/Folder';
+import RestoreIcon from '@material-ui/icons/Restore';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import LocationOnIcon from '@material-ui/icons/LocationOn';
 import socket from '../lib/socket';
 import ChatForm from './ChatForm';
 
@@ -17,12 +22,13 @@ interface State {
     logs: any[]
     name: string
     cnt: number | null
+    value: string
 }
 
 class ChatApp extends React.Component<{}, State> {
     constructor (props: Readonly<{}>) {
         super(props);
-        this.state = { logs: [], name: '', cnt: null };
+        this.state = { logs: [], name: '', cnt: null, value: 'recents' };
     }
 
     componentDidMount() {
@@ -44,6 +50,8 @@ class ChatApp extends React.Component<{}, State> {
         });
     }
 
+    handleChange = (e: ChangeEvent<{}>, value: any) => this.setState({ ...this.state, value })
+
     handleChangeName = (name: string) => {
         this.setState({ name });
         socket.emit('update-name', { name });
@@ -55,23 +63,41 @@ class ChatApp extends React.Component<{}, State> {
     }
 
     render() {
-        const { logs, name } = this.state;
+        const { logs, name, value } = this.state;
         const messages = logs.map((message: message) => (
-            <div style={{background: 'blue'}} key={message.key}>
-                <span>{message.name}</span>
-                <span>{message.message}</span>
-            </div>
+            <TableRow key={message.key}>
+                <TableCell align="right">{message.name || '*공지*'}</TableCell>
+                <TableCell align="right">{message.message}</TableCell>
+            </TableRow>
         ));
         
         return (
-            <div>
+            <Container maxWidth="sm">
                 <ChatForm
                     name={name}
                     handleChangeName={this.handleChangeName}
                     handleSendMessage={this.handleSendMessage}
                 />
-                <div>{messages}</div>
-            </div>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell align="right">Name</TableCell>
+                                <TableCell align="right">Message</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {messages}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <BottomNavigation value={value} onChange={this.handleChange} style={{width: 500}}>
+                    <BottomNavigationAction label="Recents" value="recents" icon={<RestoreIcon />} />
+                    <BottomNavigationAction label="Favorites" value="favorites" icon={<FavoriteIcon />} />
+                    <BottomNavigationAction label="Nearby" value="nearby" icon={<LocationOnIcon />} />
+                    <BottomNavigationAction label="Folder" value="folder" icon={<FolderIcon />} />
+                </BottomNavigation>
+            </Container>
         );
     }
 }
