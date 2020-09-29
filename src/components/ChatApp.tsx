@@ -23,12 +23,19 @@ interface State {
     name: string
     cnt: number | null
     value: string
+    room: string | null
 }
 
 class ChatApp extends React.Component<{}, State> {
     constructor (props: Readonly<{}>) {
         super(props);
-        this.state = { logs: [], name: '', cnt: null, value: 'recents' };
+        this.state = {
+            logs: [],
+            name: '',
+            cnt: null,
+            room: null,
+            value: 'recents',
+        };
     }
 
     componentDidMount() {
@@ -48,6 +55,19 @@ class ChatApp extends React.Component<{}, State> {
             });
             this.setState({ logs: tempLog });
         });
+
+        // Random chat room
+        socket.on('req-join-room-accepted', (params: any) => {
+            // TODO: 방으로 들어가기
+        })
+
+        socket.on('receive-msg-in-room', (params: message = { name: '', message: '' }) => {
+            // TODO: 방 내에 받은 메시지 띄우기
+        });
+
+        socket.on('disconnect', () => {
+            // TODO: 방 밖으로 이동
+        });
     }
 
     handleChange = (e: ChangeEvent<{}>, value: any) => this.setState({ ...this.state, value })
@@ -62,8 +82,23 @@ class ChatApp extends React.Component<{}, State> {
         socket.emit('send-msg', { name, message });
     }
 
+    // TODO: 랜덤방 요청 시 이벤트 핸들러 socket.emit('req-join-room');
+    handleRequestRandomRoom = () => {
+
+    }
+
+    // TODO: (기다리는 상태에서) 랜덤요청 취소 시 이벤트 핸들러 socket.emit('req-join-room-canceled')
+    handleCancelRequestRandomRoom = () => {
+        
+    }
+
+    // TODO: 랜덤방 내에서 메시지 전송 시 이벤트 핸들러 socket.emit('send-msg-in-room')
+    handleSendMessageInRoom = (message: string) => {
+
+    }
+
     render() {
-        const { logs, name, value } = this.state;
+        const { logs, name, room, value } = this.state;
         const messages = logs.map((message: message) => (
             <TableRow key={message.key}>
                 <TableCell align="right">{message.name || '*공지*'}</TableCell>
@@ -75,6 +110,7 @@ class ChatApp extends React.Component<{}, State> {
             <Container maxWidth="sm">
                 <ChatForm
                     name={name}
+                    room={room}
                     handleChangeName={this.handleChangeName}
                     handleSendMessage={this.handleSendMessage}
                 />

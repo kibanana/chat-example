@@ -12,6 +12,7 @@ interface State {
 
 interface Props {
     name: string
+    room: string | null
     handleChangeName: Function
     handleSendMessage: Function
 }
@@ -19,7 +20,12 @@ interface Props {
 class ChatForm extends React.Component<Readonly<Props>, State> {
     constructor (props: Readonly<Props>) {
         super(props);
-        this.state = { tempName: '', readOnlyName: true, message: '', cnt: -1 };
+        this.state = {
+            tempName: '',
+            readOnlyName: true,
+            message: '',
+            cnt: -1
+        };
     }
 
     handleChange = (e: { target: { name: any; value: any; }; }) => this.setState({ ...this.state, [e.target.name]: e.target.value })
@@ -27,7 +33,7 @@ class ChatForm extends React.Component<Readonly<Props>, State> {
     handleChangeNameReadOnly = (e: any) => this.setState((state) => ({ readOnlyName: !state.readOnlyName }))
 
     render() {
-        const { handleChangeName, handleSendMessage } = this.props;
+        const { handleChangeName, handleSendMessage, room } = this.props;
         const { tempName, readOnlyName, message } = this.state;
 
         return (
@@ -77,6 +83,9 @@ class ChatForm extends React.Component<Readonly<Props>, State> {
                             보내기
                         </Button>
                     </form>
+                    <div>
+                        {room ? '광장' : ''}
+                    </div>
                 </CardContent>
             </Card>
         );
