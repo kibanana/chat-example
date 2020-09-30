@@ -12,7 +12,7 @@ interface State {
 
 interface Props {
     name: string
-    room: string | null
+    room: boolean
     handleChangeName: Function
     handleSendMessage: Function
 }

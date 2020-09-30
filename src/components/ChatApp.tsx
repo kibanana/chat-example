@@ -1,5 +1,19 @@
 import React, { ChangeEvent } from 'react';
-import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, BottomNavigation, BottomNavigationAction, Snackbar } from '@material-ui/core';
+import {
+    Container,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    BottomNavigation,
+    BottomNavigationAction,
+    Snackbar,
+    Button,
+    CircularProgress
+} from '@material-ui/core';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import EmojiPeopleRoundedIcon from '@material-ui/icons/EmojiPeopleRounded';
 import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
@@ -28,7 +42,8 @@ interface State {
     name: string
     cnt: number | null
     menu: string
-    room: string | null
+    room: boolean
+    progressing: boolean
     showSuccessSnackbar: boolean
     showFailureSnackbar: boolean
 }
@@ -40,8 +55,9 @@ class ChatApp extends React.Component<{}, State> {
             logs: [],
             name: '',
             cnt: null,
-            room: null,
+            room: false,
             menu: 'room',
+            progressing: false,
             showSuccessSnackbar: false,
             showFailureSnackbar: false,
         };
@@ -49,8 +65,17 @@ class ChatApp extends React.Component<{}, State> {
 
     componentDidMount() {
         socket.on('connected', (params: any) => {
-            this.setState({ showSuccessSnackbar: true });
-            setTimeout(() => this.setState({ showSuccessSnackbar: false }), 1000)
+            this.setState({ showSuccessSnackbar: true, logs: [] });
+            setTimeout(() => this.setState({
+                logs: [],
+                name: '',
+                cnt: null,
+                room: false,
+                menu: 'room',
+                progressing: false,
+                showSuccessSnackbar: false,
+                showFailureSnackbar: false,
+            }), 1000)
         });
 
         socket.on('disconnected', (params: any) => {
@@ -78,14 +103,8 @@ class ChatApp extends React.Component<{}, State> {
         // Random chat room
         socket.on('req-join-room-accepted', (params: any) => {
             // TODO: 방으로 들어가기
-        });
-
-        socket.on('receive-msg-in-room', (params: message = { name: '', message: '' }) => {
-            // TODO: 방 내에 받은 메시지 띄우기
-        });
-
-        socket.on('disconnect', () => {
-            // TODO: 방 밖으로 이동
+            this.setState({ progressing: false });
+            this.setState({ room: true })
         });
     }
 
@@ -97,30 +116,30 @@ class ChatApp extends React.Component<{}, State> {
     }
 
     handleSendMessage = (message: string) => {
-        const { name } = this.state;
-        socket.emit('send-msg', { name, message });
+        socket.emit('send-msg', { message });
+    }
+
+    handleSendMessageInRoom = (message: string) => {
+        socket.emit('send-msg-in-room', { message });
     }
 
     // TODO: 랜덤방 요청 시 이벤트 핸들러 socket.emit('req-join-room');
     handleRequestRandomRoom = () => {
-        
+        socket.emit('req-join-room');
+        this.setState({ progressing: true });
     }
 
     // TODO: (기다리는 상태에서) 랜덤요청 취소 시 이벤트 핸들러 socket.emit('req-join-room-canceled')
     handleCancelRequestRandomRoom = () => {
-        
-    }
-
-    // TODO: 랜덤방 내에서 메시지 전송 시 이벤트 핸들러 socket.emit('send-msg-in-room')
-    handleSendMessageInRoom = (message: string) => {
-        
+        socket.emit('req-join-room-canceled');
+        this.setState({ progressing: false });
     }
 
     handleSuccessSnackbarClose = () => this.setState({ showSuccessSnackbar: false })
     handleFailureSnackbarClose = () => this.setState({ showFailureSnackbar: false })
 
     render() {
-        const { logs, name, room, menu, showSuccessSnackbar, showFailureSnackbar } = this.state;
+        const { logs, name, room, menu, progressing, showSuccessSnackbar, showFailureSnackbar } = this.state;
         const messages = logs.map((message: message) => (
             <TableRow key={message.key}>
                 <TableCell align="right">{message.name || '*공지*'}</TableCell>
@@ -140,11 +159,26 @@ class ChatApp extends React.Component<{}, State> {
                         This is a disconnected event!
                     </Alert>
                 </Snackbar>
+
+                <Button onClick={this.handleRequestRandomRoom} disabled={progressing}>
+                    채팅 상대 찾기
+                </Button>
+                {
+                    progressing &&
+                    (
+                        <>
+                            <CircularProgress />
+                            <Button onClick={this.handleCancelRequestRandomRoom}>
+                                취소
+                            </Button>
+                        </>
+                    )
+                }
                 <ChatForm
                     name={name}
                     room={room}
                     handleChangeName={this.handleChangeName}
-                    handleSendMessage={this.handleSendMessage}
+                    handleSendMessage={room ? this.handleSendMessageInRoom : this.handleSendMessage }
                 />
                 <TableContainer component={Paper}>
                     <Table>
