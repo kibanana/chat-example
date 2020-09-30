@@ -1,11 +1,16 @@
 import React, { ChangeEvent } from 'react';
-import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, BottomNavigation, BottomNavigationAction, Snackbar } from '@material-ui/core';
+import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 import FolderIcon from '@material-ui/icons/Folder';
 import RestoreIcon from '@material-ui/icons/Restore';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import LocationOnIcon from '@material-ui/icons/LocationOn';
 import socket from '../lib/socket';
 import ChatForm from './ChatForm';
+
+function Alert(props: AlertProps) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
 
 interface message {
     key?: string
@@ -24,6 +29,8 @@ interface State {
     cnt: number | null
     value: string
     room: string | null
+    showSuccessSnackbar: boolean
+    showFailureSnackbar: boolean
 }
 
 class ChatApp extends React.Component<{}, State> {
@@ -35,10 +42,22 @@ class ChatApp extends React.Component<{}, State> {
             cnt: null,
             room: null,
             value: 'recents',
+            showSuccessSnackbar: false,
+            showFailureSnackbar: false,
         };
     }
 
     componentDidMount() {
+        socket.on('connected', (params: any) => {
+            this.setState({ showSuccessSnackbar: true });
+            setTimeout(() => this.setState({ showSuccessSnackbar: false }), 1000)
+        });
+
+        socket.on('disconnected', (params: any) => {
+            this.setState({ showFailureSnackbar: true });
+            setTimeout(() => this.setState({ showFailureSnackbar: false }), 1000)
+        });
+
         socket.on('receive-name', (params: cnt = { name: '', cnt: -1 }) => {
             const { name, cnt } = params;
             this.setState({ name, cnt });
@@ -89,7 +108,7 @@ class ChatApp extends React.Component<{}, State> {
 
     // TODO: (기다리는 상태에서) 랜덤요청 취소 시 이벤트 핸들러 socket.emit('req-join-room-canceled')
     handleCancelRequestRandomRoom = () => {
-        
+
     }
 
     // TODO: 랜덤방 내에서 메시지 전송 시 이벤트 핸들러 socket.emit('send-msg-in-room')
@@ -97,8 +116,11 @@ class ChatApp extends React.Component<{}, State> {
 
     }
 
+    handleSuccessSnackbarClose = () => this.setState({ showSuccessSnackbar: false })
+    handleFailureSnackbarClose = () => this.setState({ showFailureSnackbar: false })
+
     render() {
-        const { logs, name, room, value } = this.state;
+        const { logs, name, room, value, showSuccessSnackbar, showFailureSnackbar } = this.state;
         const messages = logs.map((message: message) => (
             <TableRow key={message.key}>
                 <TableCell align="right">{message.name || '*공지*'}</TableCell>
@@ -108,6 +130,16 @@ class ChatApp extends React.Component<{}, State> {
         
         return (
             <Container maxWidth="sm">
+                <Snackbar open={showSuccessSnackbar} autoHideDuration={6000} onClose={this.handleSuccessSnackbarClose}>
+                    <Alert onClose={this.handleSuccessSnackbarClose} severity="success">
+                        This is a connected event!
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={showFailureSnackbar} autoHideDuration={6000} onClose={this.handleFailureSnackbarClose}>
+                    <Alert onClose={this.handleFailureSnackbarClose} severity="error">
+                        This is a disconnected event!
+                    </Alert>
+                </Snackbar>
                 <ChatForm
                     name={name}
                     room={room}
