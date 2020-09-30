@@ -1,10 +1,10 @@
 import React, { ChangeEvent } from 'react';
 import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, BottomNavigation, BottomNavigationAction, Snackbar } from '@material-ui/core';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
-import FolderIcon from '@material-ui/icons/Folder';
-import RestoreIcon from '@material-ui/icons/Restore';
-import FavoriteIcon from '@material-ui/icons/Favorite';
-import LocationOnIcon from '@material-ui/icons/LocationOn';
+import EmojiPeopleRoundedIcon from '@material-ui/icons/EmojiPeopleRounded';
+import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
+import SettingsIcon from '@material-ui/icons/Settings';
+import SaveIcon from '@material-ui/icons/Save';
 import socket from '../lib/socket';
 import ChatForm from './ChatForm';
 
@@ -27,7 +27,7 @@ interface State {
     logs: any[]
     name: string
     cnt: number | null
-    value: string
+    menu: string
     room: string | null
     showSuccessSnackbar: boolean
     showFailureSnackbar: boolean
@@ -41,7 +41,7 @@ class ChatApp extends React.Component<{}, State> {
             name: '',
             cnt: null,
             room: null,
-            value: 'recents',
+            menu: 'room',
             showSuccessSnackbar: false,
             showFailureSnackbar: false,
         };
@@ -78,7 +78,7 @@ class ChatApp extends React.Component<{}, State> {
         // Random chat room
         socket.on('req-join-room-accepted', (params: any) => {
             // TODO: 방으로 들어가기
-        })
+        });
 
         socket.on('receive-msg-in-room', (params: message = { name: '', message: '' }) => {
             // TODO: 방 내에 받은 메시지 띄우기
@@ -89,7 +89,7 @@ class ChatApp extends React.Component<{}, State> {
         });
     }
 
-    handleChange = (e: ChangeEvent<{}>, value: any) => this.setState({ ...this.state, value })
+    handleMenuChange = (e: ChangeEvent<{}>, value: any) => this.setState({ ...this.state, menu: value })
 
     handleChangeName = (name: string) => {
         this.setState({ name });
@@ -103,24 +103,24 @@ class ChatApp extends React.Component<{}, State> {
 
     // TODO: 랜덤방 요청 시 이벤트 핸들러 socket.emit('req-join-room');
     handleRequestRandomRoom = () => {
-
+        
     }
 
     // TODO: (기다리는 상태에서) 랜덤요청 취소 시 이벤트 핸들러 socket.emit('req-join-room-canceled')
     handleCancelRequestRandomRoom = () => {
-
+        
     }
 
     // TODO: 랜덤방 내에서 메시지 전송 시 이벤트 핸들러 socket.emit('send-msg-in-room')
     handleSendMessageInRoom = (message: string) => {
-
+        
     }
 
     handleSuccessSnackbarClose = () => this.setState({ showSuccessSnackbar: false })
     handleFailureSnackbarClose = () => this.setState({ showFailureSnackbar: false })
 
     render() {
-        const { logs, name, room, value, showSuccessSnackbar, showFailureSnackbar } = this.state;
+        const { logs, name, room, menu, showSuccessSnackbar, showFailureSnackbar } = this.state;
         const messages = logs.map((message: message) => (
             <TableRow key={message.key}>
                 <TableCell align="right">{message.name || '*공지*'}</TableCell>
@@ -159,11 +159,10 @@ class ChatApp extends React.Component<{}, State> {
                         </TableBody>
                     </Table>
                 </TableContainer>
-                <BottomNavigation value={value} onChange={this.handleChange} style={{width: 500}}>
-                    <BottomNavigationAction label="Recents" value="recents" icon={<RestoreIcon />} />
-                    <BottomNavigationAction label="Favorites" value="favorites" icon={<FavoriteIcon />} />
-                    <BottomNavigationAction label="Nearby" value="nearby" icon={<LocationOnIcon />} />
-                    <BottomNavigationAction label="Folder" value="folder" icon={<FolderIcon />} />
+                <BottomNavigation value={menu} onChange={this.handleMenuChange}>
+                    <BottomNavigationAction label="Friend" value="friend" icon={<EmojiPeopleRoundedIcon />} />
+                    <BottomNavigationAction label="Room" value="room" icon={<MeetingRoomIcon />} />
+                    <BottomNavigationAction label="Setting" value="setting" icon={<SettingsIcon />} />
                 </BottomNavigation>
             </Container>
         );
