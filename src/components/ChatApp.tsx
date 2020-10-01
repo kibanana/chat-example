@@ -14,17 +14,14 @@ import {
     Button,
     CircularProgress
 } from '@material-ui/core';
-import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
+import SettingsInputAntennaIcon from '@material-ui/icons/SettingsInputAntenna';
 import EmojiPeopleRoundedIcon from '@material-ui/icons/EmojiPeopleRounded';
 import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
 import SettingsIcon from '@material-ui/icons/Settings';
 import SaveIcon from '@material-ui/icons/Save';
 import socket from '../lib/socket';
+import Alert from './Alert';
 import ChatForm from './ChatForm';
-
-function Alert(props: AlertProps) {
-  return <MuiAlert elevation={6} variant="filled" {...props} />;
-}
 
 interface message {
     key?: string
@@ -65,10 +62,14 @@ class ChatApp extends React.Component<{}, State> {
 
     componentDidMount() {
         socket.on('connected', (params: any) => {
-            this.setState({ showSuccessSnackbar: true, logs: [] });
-            setTimeout(() => this.setState({
-                logs: [],
-                name: '',
+            console.log(socket.connected);
+            console.log(socket.disconnected);
+
+            this.setState({ showSuccessSnackbar: true });
+            const optional: { logs?: any[] } = {};
+            const { logs } = this.state;
+            if (logs.length > 1) optional['logs'] = [];
+            setTimeout(() => this.setState({ // 서버와 연결이 끊기고 다시 연결됐을 때 connected 이벤트 처리
                 cnt: null,
                 room: false,
                 menu: 'room',
@@ -79,7 +80,7 @@ class ChatApp extends React.Component<{}, State> {
         });
 
         socket.on('disconnected', (params: any) => {
-            this.setState({ showFailureSnackbar: true });
+            this.setState({ showFailureSnackbar: true, room: false });
             setTimeout(() => this.setState({ showFailureSnackbar: false }), 1000)
         });
 
@@ -103,8 +104,7 @@ class ChatApp extends React.Component<{}, State> {
         // Random chat room
         socket.on('req-join-room-accepted', (params: any) => {
             // TODO: 방으로 들어가기
-            this.setState({ progressing: false });
-            this.setState({ room: true })
+            this.setState({ progressing: false, room: true });
         });
     }
 
@@ -160,9 +160,15 @@ class ChatApp extends React.Component<{}, State> {
                     </Alert>
                 </Snackbar>
 
-                <Button onClick={this.handleRequestRandomRoom} disabled={progressing}>
-                    채팅 상대 찾기
-                </Button>
+                {
+                    room ||
+                    (
+                        <Button onClick={this.handleRequestRandomRoom} disabled={progressing}>
+                            채팅 상대 찾기
+                        </Button>
+                    )
+                }
+                
                 {
                     progressing &&
                     (
@@ -194,6 +200,7 @@ class ChatApp extends React.Component<{}, State> {
                     </Table>
                 </TableContainer>
                 <BottomNavigation value={menu} onChange={this.handleMenuChange}>
+                    <BottomNavigationAction label="PlayGround" value="ground" icon={<SettingsInputAntennaIcon />} />
                     <BottomNavigationAction label="Friend" value="friend" icon={<EmojiPeopleRoundedIcon />} />
                     <BottomNavigationAction label="Room" value="room" icon={<MeetingRoomIcon />} />
                     <BottomNavigationAction label="Setting" value="setting" icon={<SettingsIcon />} />

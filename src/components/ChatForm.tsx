@@ -83,9 +83,6 @@ class ChatForm extends React.Component<Readonly<Props>, State> {
                             보내기
                         </Button>
                     </form>
-                    <div>
-                        {room ? '광장' : ''}
-                    </div>
                 </CardContent>
             </Card>
         );
